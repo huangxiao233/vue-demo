@@ -51,20 +51,24 @@ var app = new Vue({
     //一开始就要检查用户是否登陆
 
     this.currentUser = this.getCurrentUser();
-    if(this.currentUser){
-      var query = new AV.Query('AllTodos')
-      query.find()
-      .then((todos)=>{
-        let avAllTodos = todos[0]
-        let id = avAllTodos.id
-        this.todoList = JSON.parse(avAllTodos.attributes.content)
-        this.todoList.id = id
-      },function(error){
-           console.error(error)
-         })
-    }
+    this.fetchTodos()
+    
   },
   methods: {
+    fetchTodos:function(){
+      if(this.currentUser){
+        var query = new AV.Query('AllTodos')
+        query.find()
+        .then((todos)=>{
+          let avAllTodos = todos[0]
+          let id = avAllTodos.id
+          this.todoList = JSON.parse(avAllTodos.attributes.content)
+          this.todoList.id = id
+        },function(error){
+             console.error(error)
+           })
+      }
+    },
     updateTodos:function(){
       let dataString = JSON.stringify(this.todoList)
       console.log(dataString)
@@ -124,6 +128,7 @@ var app = new Vue({
     login: function () {
       AV.User.logIn(this.formData.username, this.formData.password).then( (loginedUser)=> {
         this.currentUser = this.getCurrentUser()
+        this.fetchTodos() //登录成功后的读取todos
       }, (error)=> {
         alert('wrong')
       });
