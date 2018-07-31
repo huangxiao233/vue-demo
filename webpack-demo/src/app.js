@@ -49,9 +49,38 @@ var app = new Vue({
   //   debugger
   // }
     //一开始就要检查用户是否登陆
+
     this.currentUser = this.getCurrentUser();
+    if(this.currentUser){
+      var query = new AV.Query('AllTodos')
+      query.find()
+      .then((todos)=>{
+        let avAllTodos = todos[0]
+        let id = avAllTodos.id
+        this.todoList = JSON.parse(avAllTodos.attributes.content)
+        this.todoList.id = id
+      },function(error){
+           console.error(error)
+         })
+    }
   },
   methods: {
+    updateTodos:function(){
+      let dataString = JSON.stringify(this.todoList)
+      console.log(dataString)
+      let avTodos = AV.Object.createWithoutData('AllTodos',this.todoList.id)
+      avTodos.set('content',dataString)//修改属性
+      avTodos.save().then(()=>{        //保存到云端
+        console.log('update success')
+      })
+    },
+    saveOrUpdateTodos:function(){
+      if(this.todoList.id){
+        this.updateTodos()
+      }else{
+        this.saveTodos()
+      }
+    },
     saveTodos:function(){
       var dataString = JSON.stringify(this.todoList)
       var AllTodos = AV.Object.extend('AllTodos')
@@ -61,11 +90,12 @@ var app = new Vue({
       acl.setWriteAccess(AV.User.current(),true)
       allTodos.set('content' , dataString);
       allTodos.setACL(acl) //设置访问控制
-      allTodos.save().then(function(todo){
-            console.log('保存成功')
+      allTodos.save().then((todo)=>{
+        this.todoList.id = todo.id
+        alert('保存成功')
       },function(error){
-           console.log('保存失败');
-      });
+        alert('失败了')
+      })
     },
     addTodo: function () {
       this.todoList.push({
@@ -74,12 +104,12 @@ var app = new Vue({
         done: false  //添加一个done属性
       })
       this.newTodo = '' //写完清空
-      this.saveTodos()
+      this.saveOrUpdateTodos()
     },
     removeTodo: function (todo) {
       let index = this.todoList.indexOf(todo)
       this.todoList.splice(index, 1)
-      this.saveTodos()
+      this.saveOrUpdateTodos()
     },
     signUp: function () {
       let user = new AV.User();
