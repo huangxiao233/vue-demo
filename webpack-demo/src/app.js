@@ -31,17 +31,38 @@ var app = new Vue({
   },
 
   created: function () {
-    window.onbeforeunload = () => {
-      let dataString = JSON.stringify(this.todoList)
-      window.localStorage.setItem('myTodos', dataString)
-    }
-    let oldDataString = window.localStorage.getItem('myTodos')
-    let oldData = JSON.parse(oldDataString)
-    this.todoList = oldData || []
+  //   window.onbeforeunload = () => {
+  //     let dataString = JSON.stringify(this.todoList)
+  //   //   window.localStorage.setItem('myTodos', dataString)
+  //   // }
+  //   // let oldDataString = window.localStorage.getItem('myTodos')
+  //   // let oldData = JSON.parse(oldDataString)
+  //   // this.todoList = oldData || []
+  //   var AVTodos = AV.Object.extend('AllToddos')
+  //   var avTodos = new AVTodos()
+  //   avTodos.set('content',datastring)
+  //   avTodos.save().then(function(todo){
+  //     console.log('success')
+  //   },function(error){
+  //     console.log('wrong')
+  //   });
+  //   debugger
+  // }
     //一开始就要检查用户是否登陆
     this.currentUser = this.getCurrentUser();
   },
   methods: {
+    saveTodos:function(){
+      var dataString = JSON.stringify(this.todoList)
+      var AllTodos = AV.Object.extend('AllTodos')
+      var allTodos = new AllTodos()
+      allTodos.set('content' , dataString);
+      allTodos.save().then(function(todo){
+            console.log('保存成功')
+      },function(error){
+           console.log('保存失败');
+      });
+    },
     addTodo: function () {
       this.todoList.push({
         title: this.newTodo,
@@ -49,10 +70,12 @@ var app = new Vue({
         done: false  //添加一个done属性
       })
       this.newTodo = '' //写完清空
+      this.saveTodos()
     },
     removeTodo: function (todo) {
       let index = this.todoList.indexOf(todo)
       this.todoList.splice(index, 1)
+      this.saveTodos()
     },
     signUp: function () {
       let user = new AV.User();
@@ -61,7 +84,7 @@ var app = new Vue({
       user.signUp().then( (loginedUser)=> {
        this.currentUser = this.getCurrentUser()
       },  (error)=> {
-        alert('wwrong')
+        alert('wrong')
       });
     },
     login: function () {
